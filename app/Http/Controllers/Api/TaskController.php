@@ -4,8 +4,9 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use App\Enums\TaskStatusEnum;
 use App\Models\Task;
-use Validator;
+use App\Http\Requests\StoreTaskRequest;
 
 class TaskController extends Controller
 {
@@ -15,7 +16,7 @@ class TaskController extends Controller
     public function index()
     {
         $tasks = Task::paginate();
-        return response()->json(['status' => ['message' => 'success', 'code' => 200], 'tasks' => $tasks], 200);
+        return response()->json(['tasks' => $tasks]);
     }
 
     /**
@@ -29,22 +30,9 @@ class TaskController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(StoreTaskRequest $request)
     {
-        //
-        $validator = Validator::make($request->all(), [
-            'title' => 'required|string|between:2,200',
-            'description' => 'required|string|between:2,250',
-            'user_id' => 'required|numeric|exists:users,id',
-            'due_date' => 'required|date',
-            'status' => 'required|string|between:2,20',
-        ]);
-        if($validator->fails()){
-            return response()->json($validator->errors(), 400);
-        }
-        //return $validator->validated();
-
-        $task = Task::create($validator->validated());
+        $task = Task::create($request->all());
         return response()->json([
             'message' => 'Task successfully Created',
             'task' => $task
@@ -56,7 +44,8 @@ class TaskController extends Controller
      */
     public function show(string $id)
     {
-        //
+        $task = Task::findorFail($id);
+        return response()->json(['task' => $task]);
     }
 
     /**
@@ -70,9 +59,14 @@ class TaskController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
+    public function update(StoreTaskRequest $request, string $id)
     {
-        //
+        Task::findOrFail($id)->update($request->all());
+        $task = Task::findOrFail($id);
+        return response()->json([
+            'message' => 'Task successfully Updated',
+            'task' => $task->first()
+        ], 201);
     }
 
     /**
@@ -80,6 +74,7 @@ class TaskController extends Controller
      */
     public function destroy(string $id)
     {
-        //
+        Task::findOrFail($id)->delete();
+        return response()->json(['message' => 'Task successfully Deleted'], 201);
     }
 }
