@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use App\Enums\TaskStatusEnum;
 use App\Models\Task;
 use App\Http\Requests\StoreTaskRequest;
+use App\Http\Resources\TaskResource;
 
 class TaskController extends Controller
 {
@@ -16,7 +17,7 @@ class TaskController extends Controller
     public function index()
     {
         $tasks = Task::paginate();
-        return response()->json(['tasks' => $tasks]);
+        return TaskResource::collection($tasks);
     }
 
     /**
@@ -35,7 +36,7 @@ class TaskController extends Controller
         $task = Task::create($request->all());
         return response()->json([
             'message' => 'Task successfully Created',
-            'task' => $task
+            'task' => new TaskResource($task)
         ], 201);
     }
 
@@ -45,7 +46,7 @@ class TaskController extends Controller
     public function show(string $id)
     {
         $task = Task::findorFail($id);
-        return response()->json(['task' => $task]);
+        return new TaskResource($task);
     }
 
     /**
@@ -65,7 +66,7 @@ class TaskController extends Controller
         $task = Task::findOrFail($id);
         return response()->json([
             'message' => 'Task successfully Updated',
-            'task' => $task->first()
+            'task' => new TaskResource($task)
         ], 201);
     }
 
